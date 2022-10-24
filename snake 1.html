@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <title>
+            Snake Game
+        </title>
+        <meta charset="UTF-8">
+        <style>
+            #myCanvas {
+                background-color: rgb(241, 241, 241)
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="myCanvas" width="500" height="500"></canvas>
+        <p id="score">Score: 0</p>
+        <button id="test" onclick="test()">test</button>
+        <script>
+            "use strict";
+            const myCanvas = document.getElementById("myCanvas");
+            const ctx = myCanvas.getContext("2d");
+
+            let score = 0;
+
+            const game = {
+                start : function() {
+                    snake.draw();
+                    food.add();
+                    food.draw();
+                    this.interval = setInterval(this.update, 100);
+                    window.addEventListener("keydown", function(e) {
+                        if (e.key == "ArrowUp" && snake.lastDirection != "down") {
+                            snake.direction = "up";
+                        }
+                        if (e.key == "ArrowLeft" && snake.lastDirection != "right") {
+                            snake.direction = "left";
+                        }
+                        if (e.key == "ArrowDown" && snake.lastDirection != "up") {
+                            snake.direction = "down";
+                        }
+                        if (e.key == "ArrowRight" && snake.lastDirection != "left") {
+                            snake.direction = "right";
+                        }
+                    });
+                },
+                clear : function() {
+                    ctx.clearRect(0, 0, myCanvas.width, myCanvas.height);
+                },
+                stop : function() {
+                    clearInterval(game.interval);
+                },
+                update : function() {
+                    game.clear();
+                    snake.move();
+                    if (food.eaten()) {
+                        food.add();
+                        snake.parts.push(snake.lastTailPos);
+                        point();
+                    }
+                    snake.draw();
+                    food.draw();
+                    if (snake.crashWith()) {
+                        game.stop();
+                    }
+                }
+            }
+            
+
+            const snake = {
+                parts : [[250, 250], [260, 250], [270, 250], [280, 250], [290, 250], [300, 250]],
+
+                draw : function() {
+                    ctx.fillStyle = "green";
+                    for (let cords of snake.parts) {
+                        ctx.fillRect(cords[0], cords[1], 10, 10);
+                    }
+                },
+                move : function() {
+                    snake.lastTailPos = [snake.parts[snake.parts.length-1][0], snake.parts[snake.parts.length-1][1]];
+                    for (let i = snake.parts.length-1; i > 0; i--) {
+                        snake.parts[i][0] = snake.parts[i-1][0];
+                        snake.parts[i][1] = snake.parts[i-1][1];
+                    }
+                    if (snake.direction == "up") {
+                        snake.parts[0][1] += -10;
+                        snake.lastDirection = "up";
+                    }
+                    if (snake.direction == "right") {
+                        snake.parts[0][0] += 10;
+                        snake.lastDirection = "right";
+                    }
+                    if (snake.direction == "down") {
+                        snake.parts[0][1] += 10;
+                        snake.lastDirection = "down";
+                    }
+                    if (snake.direction == "left") {
+                        snake.parts[0][0] += -10;
+                        snake.lastDirection = "left";
+                    }
+                },
+                crashWith : function() {
+                    let crashWithSelf;
+                    for (let i = snake.parts.length-1; i >= 1; i--) {
+                        if (snake.parts[0][0] == snake.parts[i][0] && snake.parts[0][1] == snake.parts[i][1]) {
+                            crashWithSelf = true;
+                            break;
+                        }
+                        crashWithSelf = false;
+                    }
+                    if (snake.parts[0][0] < 0 || snake.parts[0][0] > myCanvas.width || snake.parts[0][1] < 0 || snake.parts[0][1] > myCanvas.height || crashWithSelf) {
+                        return true;
+                    }
+                    else {
+                        return false;
+                    }
+                },
+                lastTailPos : [],
+                lastDirection : "left",
+                direction : "left"
+            }
+
+            const food = {
+                add : function() {
+                    let cordsEqual = true;
+                    while (cordsEqual) {
+                        food.random = newRandomPos();
+                        for (const part of snake.parts) {
+                            if (part != food.random) {
+                                cordsEqual = false;
+                            }
+                            else {
+                                cordsEqual = true;
+                                break;
+                            }
+                        }
+                    }
+                },
+                draw : function() {
+                    ctx.fillStyle = "red";
+                    ctx.fillRect(food.random[0], food.random[1], 10, 10);
+                },
+                eaten : function() {
+                    if (food.random[0] == snake.parts[0][0] && food.random[1] == snake.parts[0][1]) {
+                        return true;
+                    }
+                },
+                random : []
+            }
+
+            function newRandomPos() {
+                let randomX = Math.floor(Math.random() * 50) * 10;
+                let randomY = Math.floor(Math.random() * 50) * 10;
+                return [randomX, randomY];
+            }
+
+            function point() {
+                score += 1;
+                document.getElementById("score").innerHTML = "Score: " + score;
+            }
+
+            function test() {
+                food.add();
+                for (let col of food.collection) {
+                    console.log(col[1]);
+                }
+            }
+
+            game.start();
+        </script>
+    </body>
+</html>
